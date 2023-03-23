@@ -1,9 +1,14 @@
-FROM alpine:latest AS kafka_dist
+ARG ALPINE_VERSION=latest
+FROM alpine:${ALPINE_VERSION} AS kafka_dist
 
 ARG scala_version=2.13
 ARG kafka_version=3.1.2
 ARG kafka_distro_base_url=https://dlcdn.apache.org/kafka
 ARG PROJECT_NAME=koperator
+ARG UID=10001
+ARG GID=10001
+RUN addgroup -g ${GID} -S appgroup && \
+  adduser -u ${UID} -S appuser -G appgroup
 
 ENV kafka_distro=kafka_$scala_version-$kafka_version.tgz
 ENV kafka_distro_asc=$kafka_distro.asc
@@ -41,7 +46,6 @@ COPY --from=kafka_dist /var/tmp/kafka_$scala_version-$kafka_version ${KAFKA_HOME
 RUN chmod a+x ${KAFKA_HOME}/bin/*.sh
 RUN chmod g+rwX ${KAFKA_HOME}
 
-# RUN adduser ${PROJECT_NAME} --disabled-password
-USER 1337
+USER ${UID}:${GID}
 
 CMD ["kafka-server-start.sh"]
